@@ -12,11 +12,14 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'YOUR_GITHUB_REPO'
-            }
-        }
+       stage('Checkout') {
+    steps {
+        git(
+            url: 'git@github.com:anuj6244/proj.git',
+            credentialsId: 'github-ssh-key'
+        )
+    }
+}
 
         stage('Build') {
             steps {
