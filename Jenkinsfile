@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "YOUR_DOCKERHUB_USERNAME/devops-demo"
+    }
+
+    tools {
+        maven 'Maven'
+        jdk 'JDK17'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git 'YOUR_GITHUB_REPO'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
+        stage('Upload to Nexus') {
+            steps {
+                sh 'mvn deploy'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE:latest .'
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS')]) {
+
+                    sh '''
+                    docker login -u $USER -p $PASS
+                    docker push $DOCKER_IMAGE:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Runtime VM') {
+            steps {
+                sh '''
+                ssh azureuser@RUNTIME_VM_IP                 "docker pull $DOCKER_IMAGE:latest &&
+                 docker stop demo || true &&
+                 docker rm demo || true &&
+                 docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest"
+                '''
+            }
+        }
+    }
+}
