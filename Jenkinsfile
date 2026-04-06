@@ -63,7 +63,7 @@ pipeline {
         stage('Deploy to Runtime VM') {
             steps {
                 sh '''
-                ssh azureuser@RUNTIME_VM_IP                 "docker pull $DOCKER_IMAGE:latest &&
+                ssh azureuser@4.186.25.130                 "docker pull $DOCKER_IMAGE:latest &&
                  docker stop demo || true &&
                  docker rm demo || true &&
                  docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest"
