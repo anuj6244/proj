@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "yourdockerhub/devops-demo"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKER_IMAGE = "YOUR_DOCKERHUB_USERNAME/devops-demo"
     }
 
     tools {
@@ -19,7 +18,8 @@ pipeline {
             url: 'git@github.com:anuj6244/proj.git',
             credentialsId: 'github-ssh-key'
         )
-        }
+    }
+}
 
         stage('Build') {
             steps {
@@ -27,7 +27,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Test') {
             steps {
                 sh 'mvn test'
             }
@@ -41,11 +41,11 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                sh 'docker build -t $DOCKER_IMAGE:latest .'
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
@@ -54,7 +54,7 @@ pipeline {
 
                     sh '''
                     docker login -u $USER -p $PASS
-                    docker push $IMAGE_NAME:$IMAGE_TAG
+                    docker push $DOCKER_IMAGE:latest
                     '''
                 }
             }
@@ -62,14 +62,12 @@ pipeline {
 
         stage('Deploy to Runtime VM') {
             steps {
-                sh """
-                ssh azureuser@RUNTIME_VM_IP '
-                docker pull $IMAGE_NAME:$IMAGE_TAG
-                docker stop demo || true
-                docker rm demo || true
-                docker run -d -p 8080:8080 --name demo $IMAGE_NAME:$IMAGE_TAG
-                '
-                """
+                sh '''
+                ssh azureuser@RUNTIME_VM_IP                 "docker pull $DOCKER_IMAGE:latest &&
+                 docker stop demo || true &&
+                 docker rm demo || true &&
+                 docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest"
+                '''
             }
         }
     }
