@@ -61,16 +61,18 @@ pipeline {
         }
 
         stage('Deploy to Runtime VM') {
-    steps {
-        sshagent(['azure-ssh-key']) {  // <-- uses the key you added
-            sh '''
-            ssh -o StrictHostKeyChecking=no azureuser@4.186.25.130 "
-            docker pull $DOCKER_IMAGE:latest &&
-            docker stop demo || true &&
-            docker rm demo || true &&
-            docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest"
-            '''
+            steps {
+                sshagent(['azure-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no azureuser@RUNTIME_VM_IP "
+                    docker pull $DOCKER_IMAGE:latest &&
+                    docker stop demo || true &&
+                    docker rm demo || true &&
+                    docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest"
+                    '''
+                }
+            }
         }
-    }
-}
-}
+
+    } // end stages
+} // end pipeline
