@@ -64,7 +64,7 @@ pipeline {
             steps {
                 sshagent(['azure-ssh-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no azureuser@RUNTIME_VM_IP "
+                    ssh -o StrictHostKeyChecking=no azureuser@4.186.25.130 "
                     docker pull $DOCKER_IMAGE:latest &&
                     docker stop demo || true &&
                     docker rm demo || true &&
