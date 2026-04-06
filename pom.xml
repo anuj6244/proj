@@ -35,7 +35,7 @@
 <distributionManagement>
     <repository>
         <id>nexus-releases</id>
-        <url>http://20.193.150.85:8081/repository/maven-releases/</url>
+        <url>http://admin:anujanuj@20.193.150.85:8081/repository/maven-releases/</url>
     </repository>
 </distributionManagement>
 
