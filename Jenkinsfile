@@ -13,10 +13,12 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/anuj6244/proj.git'
-            }
+       stage('Checkout') {
+    steps {
+        git(
+            url: 'git@github.com:anuj6244/proj.git',
+            credentialsId: 'github-ssh-key'
+        )
         }
 
         stage('Build') {
