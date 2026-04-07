@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "YOUR_DOCKERHUB_USERNAME/devops-demo"
+        DOCKER_IMAGE = "anuj6244/devops-demo"
     }
 
     tools {
@@ -12,11 +12,11 @@ pipeline {
 
     stages {
 
-       stage('Checkout') {
+     stage('Checkout') {
     steps {
         git(
-            url: 'git@github.com:anuj6244/proj.git',
-            credentialsId: 'github-ssh-key'
+            url: 'https://github.com/anuj6244/proj.git',
+            branch: 'main'
         )
     }
 }
@@ -30,14 +30,6 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'mvn test'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
-                }
             }
         }
 
@@ -70,13 +62,17 @@ pipeline {
 
         stage('Deploy to Runtime VM') {
             steps {
-                sh '''
-                ssh azureuser@RUNTIME_VM_IP                 "docker pull $DOCKER_IMAGE:latest &&
-                 docker stop demo || true &&
-                 docker rm demo || true &&
-                 docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest"
-                '''
+                sshagent(['azure-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no azureuser@4.186.25.130 "
+                    docker pull $DOCKER_IMAGE:latest &&
+                    docker stop demo || true &&
+                    docker rm demo || true &&
+                    docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest"
+                    '''
+                }
             }
         }
-    }
-}
+
+    } // end stages
+} // end pipeline
